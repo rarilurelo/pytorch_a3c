@@ -9,6 +9,8 @@ Since PyTorch has a easy method to control shared memory within multiprocess, we
 * PyTorch 0.1.6
 * Python 3.5.2
 * gym 0.7.2
+* skimage 0.12.3
+
 
 
 ## Usage
