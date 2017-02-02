@@ -1,7 +1,5 @@
 import os
 import numpy as np
-from skimage.color import rgb2gray
-from skimage.transform import resize
 import argparse
 import gym
 from gym import wrappers
