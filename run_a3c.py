@@ -12,7 +12,7 @@ import torch.multiprocessing as mp
 
 from async_rmsprop import AsyncRMSprop
 from policy import Policy
-from wrapper_env import StackEnv
+from wrapper_env import StackEnv, AtariEnv
 
 
 def train(rank, global_policy, local_policy, optimizer, env, global_t, args):
@@ -31,7 +31,7 @@ def train(rank, global_policy, local_policy, optimizer, env, global_t, args):
         for i in range(args.local_t_max):
             global_t += 1
             step += 1
-            p, v = local_policy(o)
+            p, v = local_policy(Variable(torch.from_numpy(o)).unsqueeze(0))
             a = p.multinomial()
             o, r, done, _ = env.step(a.data.squeeze()[0])
             if rank == 0:
@@ -61,7 +61,7 @@ def train(rank, global_policy, local_policy, optimizer, env, global_t, args):
                     step = 0
                 break
         else:
-            _, v = local_policy(o)
+            _, v = local_policy(Variable(torch.from_numpy(o).unsqueeze(0)))
             R += v.data.squeeze()[0]
 
         returns = []
@@ -92,7 +92,7 @@ if __name__ == '__main__':
     parser.add_argument('--gamma', type=float, default=0.99, metavar='G',
                         help='discount factor (default: 0.99)')
     parser.add_argument('--seed', type=int, default=543, metavar='N',
-                        help='random seed (default: 1)')
+                        help='random seed (default: 543)')
     parser.add_argument('--render', action='store_true',
                         help='render the environment')
     parser.add_argument('--monitor', action='store_true',
@@ -101,7 +101,7 @@ if __name__ == '__main__':
                         help='save dir')
     parser.add_argument('--epoch', type=int, default=10000000, metavar='N',
                         help='training epoch number')
-    parser.add_argument('--local_t_max', type=int, default=50, metavar='N',
+    parser.add_argument('--local_t_max', type=int, default=20, metavar='N',
                         help='bias variance control parameter')
     parser.add_argument('--entropy_beta', type=float, default=0.01, metavar='E',
                         help='coefficient of entropy')
@@ -109,10 +109,12 @@ if __name__ == '__main__':
                         help='coefficient of value loss')
     parser.add_argument('--frame_num', type=int, default=4, metavar='N',
                         help='number of frames you use as observation')
-    parser.add_argument('--lr', type=float, default=0.0011, metavar='L',
+    parser.add_argument('--lr', type=float, default=0.0001, metavar='L',
                         help='learning rate')
-    parser.add_argument('--env', type=str, default='CartPole-v0',
+    parser.add_argument('--env', type=str, default='Breakout-v0',
                         help='Environment')
+    parser.add_argument('--atari', action='store_true',
+                        help='atari environment')
     parser.add_argument('--num_process', type=int, default=8, metavar='n',
                         help='number of processes')
     parser.add_argument('--eps', type=float, default=0.1, metavar='E',
@@ -128,16 +130,17 @@ if __name__ == '__main__':
     env = gym.make(args.env)
     if args.monitor:
         env = wrappers.Monitor(env, args.log_dir, force=True)
+    env = AtariEnv(env)
     env = StackEnv(env, args.frame_num)
     env.seed(args.seed)
     torch.manual_seed(args.seed)
-    
-    global_policy = Policy(env.action_space.n, env.observation_space.shape[0], args.frame_num)
+
+    global_policy = Policy(env.action_space.n, atari=args.atari, dim_obs=env.observation_space.shape[0], out_dim=512, frame_num=args.frame_num)
     global_policy.share_memory()
-    local_policy = Policy(env.action_space.n, env.observation_space.shape[0], args.frame_num)
-    
+    local_policy = Policy(env.action_space.n, atari=args.atari, dim_obs=env.observation_space.shape[0], out_dim=512, frame_num=args.frame_num)
+
     optimizer = AsyncRMSprop(global_policy.parameters(), local_policy.parameters(), lr=args.lr, eps=args.eps)
-    
+
     global_t = torch.LongTensor(1).share_memory_()
     global_t.zero_()
     processes = []
