@@ -13,6 +13,7 @@ import torch.multiprocessing as mp
 from async_rmsprop import AsyncRMSprop
 from policy import Policy
 from wrapper_env import StackEnv, AtariEnv
+import logger
 
 
 def train(rank, global_policy, local_policy, optimizer, env, global_t, args):
@@ -69,20 +70,26 @@ def train(rank, global_policy, local_policy, optimizer, env, global_t, args):
             R = r + 0.99 * R
             returns.insert(0, R)
         returns = torch.Tensor(returns)
-        if len(returns) > 1:
-            returns = (returns-returns.mean()) / (returns.std()+args.eps)
+        #if len(returns) > 1:
+        #    returns = (returns-returns.mean()) / (returns.std()+args.eps)
         v_loss = 0
         entropy = 0
         for a, v, p, r in zip(actions, values, probs, returns):
             a.reinforce(r - v.data.squeeze())
             _v_loss = nn.MSELoss()(v, Variable(torch.Tensor([r])))
             v_loss += _v_loss
-            entropy += (p * (p + args.eps).log()).sum()
+            entropy += -(p * (p + args.eps).log()).sum()
         v_loss = v_loss * 0.5 * args.v_loss_coeff
         entropy = entropy * args.entropy_beta
+        loss = v_loss - entropy
+        if rank == 0:
+            logger.record_tabular('Entropy', entropy.data.numpy())
+            logger.record_tabular('V', v_loss.data.numpy())
+            logger.record_tabular_misc_stat('Return', returns.numpy())
+            logger.dump_tabular()
         optimizer.zero_grad()
-        final_node = [v_loss, entropy] + actions
-        gradients = [torch.ones(1), torch.ones(1)] + [None] * len(actions)
+        final_node = [loss] + actions
+        gradients = [torch.ones(1)] + [None] * len(actions)
         autograd.backward(final_node, gradients)
         new_lr = (args.epoch - global_t[0]) / args.epoch * args.lr
         optimizer.step(new_lr)
@@ -124,6 +131,7 @@ if __name__ == '__main__':
     parser.add_argument('--save_mode', type=str, default='max', metavar='S',
                         help='save mode. all or last or max')
     args = parser.parse_args()
+    logger.add_tabular_output(os.path.join(args.log_dir, 'progress.csv'))
     if not os.path.exists(args.log_dir):
         os.mkdir(args.log_dir)
 

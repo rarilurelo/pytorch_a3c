@@ -28,6 +28,8 @@ def test(policy, args):
             sum_rewards += r
             if args.render:
                 env.render()
+                import time
+                time.sleep(1)
         print('----------------------------------')
         print('total reward of the episode:', sum_rewards)
         print('----------------------------------')
