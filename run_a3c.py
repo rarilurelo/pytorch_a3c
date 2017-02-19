@@ -21,6 +21,9 @@ def train(rank, global_policy, local_policy, optimizer, env, global_t, args):
     step = 0
     sum_rewards = 0
     max_sum_rewards = 0
+    vs = []
+    entropies = []
+    sum_rewards = 0
     while global_t[0] < args.epoch:
         local_policy.sync(global_policy)
         observations = []
@@ -58,7 +61,6 @@ def train(rank, global_policy, local_policy, optimizer, env, global_t, args):
                         if max_sum_rewards < sum_rewards:
                             torch.save(local_policy, os.path.join(args.log_dir, args.save_name+'.pkl'))
                             max_sum_rewards = sum_rewards
-                    sum_rewards = 0
                     step = 0
                 break
         else:
@@ -82,11 +84,18 @@ def train(rank, global_policy, local_policy, optimizer, env, global_t, args):
         v_loss = v_loss * 0.5 * args.v_loss_coeff
         entropy = entropy * args.entropy_beta
         loss = v_loss - entropy
-        if rank == 0:
-            logger.record_tabular('Entropy', entropy.data.numpy())
-            logger.record_tabular('V', v_loss.data.numpy())
-            logger.record_tabular_misc_stat('Return', returns.numpy())
+        vs.append(v_loss.data.numpy())
+        entropies.append(entropy.data.numpy())
+        if rank == 0 and done:
+            logger.record_tabular_misc_stat('Entropy', entropies)
+            logger.record_tabular_misc_stat('V', vs)
+            logger.record_tabular('reward', sum_rewards)
+            logger.record_tabular('step', global_t[0])
             logger.dump_tabular()
+            del vs[:]
+            del entropies[:]
+            sum_rewards = 0
+            print(probs[0])
         optimizer.zero_grad()
         final_node = [loss] + actions
         gradients = [torch.ones(1)] + [None] * len(actions)
@@ -116,7 +125,7 @@ if __name__ == '__main__':
                         help='coefficient of value loss')
     parser.add_argument('--frame_num', type=int, default=4, metavar='N',
                         help='number of frames you use as observation')
-    parser.add_argument('--lr', type=float, default=0.0001, metavar='L',
+    parser.add_argument('--lr', type=float, default=0.005, metavar='L',
                         help='learning rate')
     parser.add_argument('--env', type=str, default='Breakout-v0',
                         help='Environment')
