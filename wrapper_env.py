@@ -45,12 +45,15 @@ class AtariEnv(object):
     def step(self, action):
         o, r, done, env_info = self.env.step(action)
         o = self._preprocess_obs(o)
+        max_o = np.maximum(o, self.last_o)
+        self.last_o = o
         r = self._preprocess_r(r)
-        return o, r, done, env_info
+        return max_o, r, done, env_info
     
     def reset(self):
         o = self.env.reset()
         o = self._preprocess_obs(o)
+        self.last_o = o
         return o
 
     def render(self):

@@ -125,7 +125,7 @@ if __name__ == '__main__':
                         help='coefficient of value loss')
     parser.add_argument('--frame_num', type=int, default=4, metavar='N',
                         help='number of frames you use as observation')
-    parser.add_argument('--lr', type=float, default=0.005, metavar='L',
+    parser.add_argument('--lr', type=float, default=0.007, metavar='L',
                         help='learning rate')
     parser.add_argument('--env', type=str, default='Breakout-v0',
                         help='Environment')
@@ -147,14 +147,17 @@ if __name__ == '__main__':
     env = gym.make(args.env)
     if args.monitor:
         env = wrappers.Monitor(env, args.log_dir, force=True)
-    env = AtariEnv(env)
+    if args.atari:
+        env = AtariEnv(env)
     env = StackEnv(env, args.frame_num)
     env.seed(args.seed)
     torch.manual_seed(args.seed)
 
-    global_policy = Policy(env.action_space.n, atari=args.atari, dim_obs=env.observation_space.shape[0], out_dim=512, frame_num=args.frame_num)
+    global_policy = Policy(env.action_space.n, atari=args.atari,
+            dim_obs=env.observation_space.shape[0], out_dim=512, frame_num=args.frame_num)
     global_policy.share_memory()
-    local_policy = Policy(env.action_space.n, atari=args.atari, dim_obs=env.observation_space.shape[0], out_dim=512, frame_num=args.frame_num)
+    local_policy = Policy(env.action_space.n, atari=args.atari,
+            dim_obs=env.observation_space.shape[0], out_dim=512, frame_num=args.frame_num)
 
     optimizer = AsyncRMSprop(global_policy.parameters(), local_policy.parameters(), lr=args.lr, eps=args.eps)
 
