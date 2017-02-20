@@ -133,7 +133,7 @@ if __name__ == '__main__':
                         help='atari environment')
     parser.add_argument('--num_process', type=int, default=8, metavar='n',
                         help='number of processes')
-    parser.add_argument('--eps', type=float, default=0.001, metavar='E',
+    parser.add_argument('--eps', type=float, default=0.01, metavar='E',
                         help='epsilon minimum log or std')
     parser.add_argument('--save_name', type=str, default='exp', metavar='N',
                         help='define save name')
