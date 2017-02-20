@@ -141,7 +141,7 @@ if __name__ == '__main__':
                         help='save mode. all or last or max')
     args = parser.parse_args()
     logger.add_tabular_output(os.path.join(args.log_dir, 'progress.csv'))
-    assert not args.env == 'Breakout-v0' and not args.atari 'You should use --atari option'
+    assert not (args.env == 'Breakout-v0' and not args.atari), 'You should use --atari option'
 
     if not os.path.exists(args.log_dir):
         os.mkdir(args.log_dir)
