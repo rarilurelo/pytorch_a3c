@@ -125,7 +125,7 @@ if __name__ == '__main__':
                         help='coefficient of value loss')
     parser.add_argument('--frame_num', type=int, default=4, metavar='N',
                         help='number of frames you use as observation')
-    parser.add_argument('--lr', type=float, default=0.007, metavar='L',
+    parser.add_argument('--lr', type=float, default=0.008, metavar='L',
                         help='learning rate')
     parser.add_argument('--env', type=str, default='Breakout-v0',
                         help='Environment')
@@ -141,6 +141,8 @@ if __name__ == '__main__':
                         help='save mode. all or last or max')
     args = parser.parse_args()
     logger.add_tabular_output(os.path.join(args.log_dir, 'progress.csv'))
+    assert not args.env == 'Breakout-v0' and not args.atari 'You should use --atari option'
+
     if not os.path.exists(args.log_dir):
         os.mkdir(args.log_dir)
 
