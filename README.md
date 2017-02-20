@@ -13,7 +13,7 @@ Since PyTorch has a easy method to control shared memory within multiprocess, we
 ## Usage
 ### training
 ```
-python run_a3c.py
+python run_a3c.py --atari
 ```
 In default settings, num_process is 8. Set it as `python run_a3c --num_process 4` to fit your number of cpu's cores.
 
