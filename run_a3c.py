@@ -35,7 +35,7 @@ def train(rank, global_policy, local_policy, optimizer, env, global_t, args):
         for i in range(args.local_t_max):
             global_t += 1
             step += 1
-            p, v = local_policy(Variable(torch.from_numpy(o)).unsqueeze(0))
+            p, v = local_policy(Variable(torch.from_numpy(o).float()).unsqueeze(0))
             a = p.multinomial()
             o, r, done, _ = env.step(a.data.squeeze()[0])
             if rank == 0:
@@ -64,7 +64,7 @@ def train(rank, global_policy, local_policy, optimizer, env, global_t, args):
                     step = 0
                 break
         else:
-            _, v = local_policy(Variable(torch.from_numpy(o).unsqueeze(0)))
+            _, v = local_policy(Variable(torch.from_numpy(o).unsqueeze(0).float()))
             R += v.data.squeeze()[0]
 
         returns = []
