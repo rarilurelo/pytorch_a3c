@@ -142,6 +142,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     logger.add_tabular_output(os.path.join(args.log_dir, 'progress.csv'))
     assert not (args.env == 'Breakout-v0' and not args.atari), 'You should use --atari option'
+    logger.log_parameters_lite(os.path.join(args.log_dir, 'params.json'), args)
 
     if not os.path.exists(args.log_dir):
         os.mkdir(args.log_dir)
