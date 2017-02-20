@@ -117,7 +117,7 @@ if __name__ == '__main__':
                         help='save dir')
     parser.add_argument('--epoch', type=int, default=10000000, metavar='N',
                         help='training epoch number')
-    parser.add_argument('--local_t_max', type=int, default=20, metavar='N',
+    parser.add_argument('--local_t_max', type=int, default=5, metavar='N',
                         help='bias variance control parameter')
     parser.add_argument('--entropy_beta', type=float, default=0.01, metavar='E',
                         help='coefficient of entropy')
@@ -125,7 +125,7 @@ if __name__ == '__main__':
                         help='coefficient of value loss')
     parser.add_argument('--frame_num', type=int, default=4, metavar='N',
                         help='number of frames you use as observation')
-    parser.add_argument('--lr', type=float, default=0.008, metavar='L',
+    parser.add_argument('--lr', type=float, default=7e-4, metavar='L',
                         help='learning rate')
     parser.add_argument('--env', type=str, default='Breakout-v0',
                         help='Environment')
@@ -133,7 +133,7 @@ if __name__ == '__main__':
                         help='atari environment')
     parser.add_argument('--num_process', type=int, default=8, metavar='n',
                         help='number of processes')
-    parser.add_argument('--eps', type=float, default=0.1, metavar='E',
+    parser.add_argument('--eps', type=float, default=0.001, metavar='E',
                         help='epsilon minimum log or std')
     parser.add_argument('--save_name', type=str, default='exp', metavar='N',
                         help='define save name')
