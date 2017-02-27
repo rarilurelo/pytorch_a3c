@@ -1,3 +1,4 @@
+# Taken from rllab
 import sys
 import time
 import os
