@@ -95,7 +95,6 @@ def train(rank, global_policy, local_policy, optimizer, env, global_t, args):
             del vs[:]
             del entropies[:]
             sum_rewards = 0
-            print(probs[0])
         optimizer.zero_grad()
         final_node = [loss] + actions
         gradients = [torch.ones(1)] + [None] * len(actions)
