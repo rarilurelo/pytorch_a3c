@@ -13,6 +13,14 @@ class AsyncRMSprop(Optimizer):
         self.local_params_group = list(local_params)
         if not isinstance(self.local_params_group[0], dict):
             self.local_params_group = [{'params': self.local_params_group}]
+        for l_group, group in zip(self.local_params_group, self.param_groups):
+            for l_p, p in zip(l_group['params'], group['params']):
+                state = self.state[id(p)]
+                # State initialization
+                if len(state) == 0:
+                    grad = l_p.grad.data
+                    state['step'] = torch.IntTensor(1).share_memory_()
+                    state['square_avg'] = grad.new().resize_as_(grad).zero_().share_memory_()
 
     def step(self, lr, closure=None):
         loss = None
@@ -24,10 +32,6 @@ class AsyncRMSprop(Optimizer):
                 grad = l_p.grad.data
                 state = self.state[id(p)]
 
-                # State initialization
-                if len(state) == 0:
-                    state['step'] = torch.IntTensor(1).share_memory_()
-                    state['square_avg'] = grad.new().resize_as_(grad).zero_().share_memory_()
 
                 square_avg = state['square_avg']
                 alpha = group['alpha']
