@@ -22,7 +22,7 @@ def test(policy, args):
         done = False
         o = env.reset()
         while not done:
-            p, v = policy(o)
+            p, v = policy(Variable(torch.from_numpy(o).float()).unsqueeze(0))
             a = p.multinomial()
             o, r, done, _ = env.step(a.data.squeeze()[0])
             sum_rewards += r
