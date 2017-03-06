@@ -12,7 +12,7 @@ import torch.multiprocessing as mp
 
 from async_rmsprop import AsyncRMSprop
 from policy import Policy
-from wrapper_env import StackEnv
+from wrapper_env import StackEnv, AtariEnv
 
 
 def test(policy, args):
@@ -55,6 +55,8 @@ if __name__ == '__main__':
                         help='path of saved model')
     parser.add_argument('--num_rollout', type=int, default=6, metavar='N',
                         help='number of rollout')
+    parser.add_argument('--atari', action='store_true',
+                        help='atari environment')
     args = parser.parse_args()
     if not os.path.exists(args.log_dir):
         os.mkdir(args.log_dir)
@@ -62,6 +64,8 @@ if __name__ == '__main__':
     env = gym.make(args.env)
     if args.monitor:
         env = wrappers.Monitor(env, args.log_dir, force=True)
+    if args.atari:
+        env = AtariEnv(env)
     env = StackEnv(env, args.frame_num)
     env.seed(args.seed)
     torch.manual_seed(args.seed)
